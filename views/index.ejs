@@ -1,0 +1,475 @@
+<html>
+	<head>
+		<title>Jansen Joblock Holmes App</title>
+		<link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+		
+		<script src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+		<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.3.10/angular.min.js"></script>
+		<script src="http://cdnjs.cloudflare.com/ajax/libs/angular-ui-router/0.2.10/angular-ui-router.js"></script>
+		
+		<script src="//connect.facebook.net/en_US/sdk.js"></script>
+<script src="http://pc035860.github.io/angular-easyfb/angular-easyfb.min.js"></script>
+		<script src="/javascripts/angularApp.js"></script>
+		<style> .glyphicon-thumbs-up { cursor:pointer } </style>
+	</head>
+	
+	<body ng-app="sqkii">
+		<nav class="navbar navbar-default pull-left">			
+			<ul class="nav navbar-nav">
+				<li ui-sref-active="active"><a ui-sref="home">Home</a></li>		
+				<li ui-sref-active="active"><a ui-sref="jobs">Jobs</a></li>		
+				<li ui-sref-active="active"><a ui-sref="resumes">Resumes</a></li>		
+				<li ui-sref-active="active"><a ui-sref="me">Me</a></li>	
+				<li ui-sref-active="active"><a ui-sref="about">About Us</a></li>	
+			</ul>
+		</nav>
+		
+		<nav class="navbar navbar-default pull-right" ng-controller="NavCtrl">
+			<ul class="nav navbar-nav">
+				<li ng-show="isLoggedIn()"><a href="/admin/loadthedata">Preload Data</a></li>
+				<li ng-show="isLoggedIn()"><a href="/#/me">{{currentUser().name}}</a></li>
+				<li ng-show="isLoggedIn()"><a href="/" ng-click="logOut()">logout</a></li>
+				<li ng-hide="isLoggedIn()"><a href="/#/fblogin">FBlogin</a></li>
+				<li ng-hide="isLoggedIn()"><a href="/#/login">login</a></li>
+				<li ng-hide="isLoggedIn()"><a href="/#/register">register</a></li>
+			</div>
+			</ul>
+		</nav>
+		
+		<div class="row">
+    		<div class="col-md-10 col-md-offset-1">
+				<ui-view></ui-view>
+			</div>
+		</div>
+		
+		
+		
+		<!-- FB login template -->
+		<script type="text/ng-template" id="/fblogin.html">
+			<div class="page-header">
+				<h1><a href="/#/home">Joblock Holmes</a></h1>
+			</div>
+
+<div>
+        <button class="btn btn-primary" ng-click="fblogin2()" ng-disabled="loginStatus.status == 'connected'">Connect with Facebook</button>
+         &nbsp; 
+        <button class="btn btn-danger" ng-click="logout()" ng-disabled="!loginStatus || loginStatus.status != 'connected'">Logout</button>
+         &nbsp;
+        <button class="btn btn-success" ng-click="share()">FB.ui</button>
+      </div>
+      
+      <br>
+
+      <div class="row">
+        <div class="col-md-6">
+          <h4 class="text-info">$FB.loginStatus()</h4>
+          <div class="code-block" hljs source="loginStatusJSON">{{loginStatusJSON}}</div>
+        </div>
+        <div class="col-md-6">
+          <h4 class="text-info">$FB.api('/me?fields=email,id,name,user_likes')</h4>
+          <div class="code-block" hljs source="apiMeJSON"></div>{{apiMe}}
+        </div>
+      </div>
+		</script>
+		
+		
+		<!-- login template -->
+		<script type="text/ng-template" id="/login.html">
+			<div class="page-header">
+				<h1><a href="/#/home">Login to Joblock Holmes</a></h1>
+			</div>
+
+			<div ng-show="error" class="alert alert-danger row">
+				<span>{{ error.message }}</span>
+			</div>
+
+			<form ng-submit="logIn()" style="margin-top:30px;">
+				<h3>Login</h3>
+
+				<div class="form-group">
+					<input type="text" class="form-control" placeholder="Desired username" ng-model="user.username" />
+				</div>
+
+				<div class="form-group">
+					<input type="password" class="form-control" placeholder="Password" ng-model="user.password" />
+				</div>
+
+				<button type="submit" class="btn btn-primary">Login</button>
+			</form>
+			
+			
+			<button ng-click="fbLogIn()">Login with Facebook</button>
+		</script>
+		
+		<!-- register template -->
+		<script type="text/ng-template" id="/register.html">
+			<div class="page-header">
+				<h1><a href="/#/home">Register with Joblock Holmes</a></h1>
+			</div>
+
+			<div ng-show="error" class="alert alert-danger row">
+				<span>{{ error.message }}</span>
+			</div>
+
+			<form ng-submit="register()" style="margin-top:30px;">
+				<h3>Register</h3>
+
+				<div class="form-group">
+					<input type="text" class="form-control" placeholder="Desired username" ng-model="user.username" />
+				</div>
+
+				<div class="form-group">
+					<input type="password" class="form-control" placeholder="Password" ng-model="user.password" />
+				</div>
+
+				<button type="submit" class="btn btn-primary">Register</button>
+			</form>
+		</script>
+		
+		<!-- home template -->
+		<script type="text/ng-template" id="/home.html">
+			<div class="page-header"><h1>{{test}}</h1></div>
+				<br>
+				<button ng-click="generateCheese()">Generate Cheese</button>
+				<br>
+				<form id="addcheese_form" ng-show="isLoggedIn()" ng-submit="addCheese()">
+					<input type="hidden" ng-model="creator" value="{{currentUser()._id}}"/>
+					<input type="text" placeholder="Title" ng-model="title" />
+					<input type="text" placeholder="Link" ng-model="link" />
+					<button type="submit">Create</button>
+				</form>
+				<div ng-hide="isLoggedIn()">
+					<h3>You need to <a href="/#/login">log in</a> or <a href="/#/register">register</a> before you can add a cheese.</h3>
+				</div>
+				
+				<div ng-show="isLoggedIn()">
+					Search: <input ng-model="query.title">
+					Sort by:
+					<select ng-model="orderProp">
+					  <option value="title">Alphabetical</option>
+					  <option value="date.end">Newest</option>
+					</select>
+				</div>
+				
+				<ul>
+					<div ng-repeat="cheese in cheeses | filter:query | orderBy:orderProp:reverse">
+						<li>
+							<span ng-click="incrementUpvotes(cheese)" class="glyphicon glyphicon-thumbs-up"></span>  
+							<a ng-show="cheese.link" href="/api/cheese/{{cheese._id}}"><Strong>{{cheese.title}}</Strong></a> 
+							
+							<Strong ng-hide="cheese.link">{{cheese.title}}</Strong>
+						</li>
+
+							<a href="/#/cheese/{{cheese._id}}"><img ng-src="{{cheese.imageurl}}" style="width:300px;"></a>
+							<ul>
+								<li>Creator : 
+									<a href="/#/user/{{cheese.creator._id}}"><span>{{cheese.creator.username}}</span></a>
+								</li>
+								
+								<li ng-show="cheese.advertiser">Advertiser : 
+									<a href="/api/advertiser/{{cheese.advertiser._id}}"><span>{{cheese.advertiser.name}}</span></a>
+								</li>
+								<li>Votes : {{cheese.upvotes}}</li>
+								<li>End Date : {{cheese.date.end}}</li>
+								<li>Time Left : {{timeLeft(cheese)}}</li>
+								<li ng-show="cheese.comments.length > 5">
+									<a href="/#/cheeses/{{cheese._id}}">View more</a>
+								</li>
+							</ul>
+						</li>
+						<br />
+					</div>
+				</ul>
+
+				<div>{{jan}}</div>
+		</script>
+		
+		
+		<!-- cheese template -->
+		<script type="text/ng-template" id="/cheese.html">
+			<div class="page-header"><h1>{{cheese.title}}</h1></div>
+			
+        <button class="btn btn-success" ng-click="shareCheese()">share this cheese on Facebook</button>
+		
+				<br>
+				<img ng-src="{{cheese.imageurl}}" style="width:300px;">
+				<br>
+				<br>
+				<ul>
+					<li>
+						<span ng-click="incrementUpvotes()" class="glyphicon glyphicon-thumbs-up"></span>  
+					</li>
+					<li>
+						<span ng-click="like()" class="glyphicon glyphicon-thumbs-up"></span>  
+					</li>
+
+					<ul>
+						<li>Creator : 
+							<a href="/#/user/{{cheese.creator._id}}"><span>{{cheese.creator.username}}</span></a>
+						</li>
+
+						<li ng-show="cheese.advertiser">Advertiser : 
+							<a href="/api/advertiser/{{cheese.advertiser._id}}"><span>{{cheese.advertiser.name}}</span></a>
+						</li>
+						<li>Votes : {{cheese.upvotes}}</li>
+						<li>Likes : {{cheese.likes.length}}</li>
+						<li>Description : {{cheese.description}}</li>
+						<li>Comments : <ul>
+							<li ng-repeat="comment in cheese.comments track by $index"><a href="/#/user/{{comment.user}}">{{comment.username}} </a>: {{comment.comment}}</li>
+							
+						</ul></li>
+						<li>Validates : <ul>
+							<li ng-repeat="validate in cheese.validates"><a href="/#/user/{{validate.user}}">{{validate.username}} </a>: {{validate.comment}} <small>{{validate.validatedAt | date: yyyy/MM/dd}}</small> </li>
+							
+						</ul></li>
+					</ul>
+					<br />
+				</ul>
+
+				<br />
+				<form ng-show="isLoggedIn()" ng-submit="addComment()">
+					<input type="text" placeholder="Comment" ng-model="comment" />
+					<button type="submit">Add a new comment</button>
+				</form>
+
+				<br />
+				<form ng-show="isLoggedIn()" ng-submit="validateCheese()">
+					<input type="date" ng-model="validatedDate" />
+					<input type="text" placeholder="How did it taste" ng-model="validateComment" />
+					<button type="submit">Tried this cheese ?</button>
+				</form>
+				<div ng-hide="isLoggedIn()">
+					<h3>You need to <a href="/#/login">Log In</a> or <a href="/#/register">Register</a> before you can comment.</h3>
+				</div>
+			
+				
+				
+				<ul>
+					//list cheese dynamically
+					<div ng-repeat="(key, val) in cheese">
+
+						<li ng-hide="key == 'comments'">{{key}}	:	{{val}}</li>
+
+						<li ng-if="key == 'comments'">Comments
+						<ul>
+							<li ng-repeat="(key2, val2) in user[key]">{{key2}}	:	{{val2}}</li>
+						</ul>
+					</div>
+				</ul>
+		</script>
+		
+		
+		<!-- discover template -->
+		<script type="text/ng-template" id="/discover.html">
+			<div class="page-header">
+				<div><h1>{{test}}</h1></div>
+				<div ng-show="isLoggedIn()">
+					Search: <input ng-model="query.title">
+					Sort by:
+					<select ng-model="orderProp">
+					  <option value="title">Alphabetical</option>
+					  <option value="date.end">Newest</option>
+					</select>
+				</div>
+			</div>
+				<br>	
+				
+				
+				<ul>
+					<div ng-repeat="cheese in cheeses | filter:query | orderBy:orderProp:reverse">
+						<li>
+							<span ng-click="incrementUpvotes(cheese)" class="glyphicon glyphicon-thumbs-up"></span>  
+							<a ng-show="cheese.link" href="/api/cheese/{{cheese._id}}"><Strong>{{cheese.title}}</Strong></a> 
+							
+							<Strong ng-hide="cheese.link">{{cheese.title}}</Strong>
+						</li>
+
+							<a href="/#/cheese/{{cheese._id}}"><img ng-src="{{cheese.imageurl}}" style="width:300px;"></a>
+							<ul>
+								<li>Creator : 
+									<a href="/#/user/{{cheese.creator._id}}"><span>{{cheese.creator.username}}</span></a>
+								</li>
+								
+								<li ng-show="cheese.advertiser">Advertiser : 
+									<a href="/api/advertiser/{{cheese.advertiser._id}}"><span>{{cheese.advertiser.name}}</span></a>
+								</li>
+								<li>Votes : {{cheese.upvotes}}</li>
+								<li>End Date : {{cheese.date.end}}</li>
+								<li ng-show="cheese.comments">
+									<a href="/#/cheeses/{{cheese._id}}">View more</a>
+								</li>
+							</ul>
+						</li>
+						<br />
+					</div>
+				</ul>
+
+				<div>{{jan}}</div>
+		
+		</script>
+		
+		<!-- discover template -->
+		<script type="text/ng-template" id="/search.html">
+			<div class="page-header">
+				<div><h1>{{test}}</h1></div>
+				<div ng-show="isLoggedIn()">
+					Search: <input ng-model="query.title">
+					Sort by:
+					<select ng-model="orderProp">
+					  <option value="title">Alphabetical</option>
+					  <option value="date.end">Newest</option>
+					</select>
+				</div>
+			</div>
+				<br>	
+				
+				
+				<ul>
+					<div ng-repeat="cheese in searchedCheeses | filter:query | orderBy:orderProp:reverse">
+						<li>
+							<span ng-click="incrementUpvotes(cheese)" class="glyphicon glyphicon-thumbs-up"></span>  
+							<a ng-show="cheese.link" href="/api/cheese/{{cheese._id}}"><Strong>{{cheese.title}}</Strong></a> 
+							
+							<Strong ng-hide="cheese.link">{{cheese.title}}</Strong>
+						</li>
+
+							<a href="/#/cheese/{{cheese._id}}"><img ng-src="{{cheese.imageurl}}" style="width:300px;"></a>
+							<ul>
+								<li>Creator : 
+									<a href="/#/user/{{cheese.creator._id}}"><span>{{cheese.creator.username}}</span></a>
+								</li>
+								
+								<li ng-show="cheese.advertiser">Advertiser : 
+									<a href="/api/advertiser/{{cheese.advertiser._id}}"><span>{{cheese.advertiser.name}}</span></a>
+								</li>
+								<li>Votes : {{cheese.upvotes}}</li>
+								<li>End Date : {{cheese.date.end}}</li>
+								<li ng-show="cheese.comments">
+									<a href="/#/cheeses/{{cheese._id}}">View more</a>
+								</li>
+							</ul>
+						</li>
+						<br />
+					</div>
+				</ul>
+
+				<div>{{jan}}</div>
+		
+		</script>
+		
+		<!-- me template -->
+		<script type="text/ng-template" id="/me.html">
+			<div class="page-header">
+				<h3>
+					<span>{{currentUser().name}}</span>
+				</h3>
+			</div>
+			
+			<div>
+
+				<div ng-repeat="(key, val) in user.data">
+
+					<li ng-hide="key == 'facebook'">{{key}}	:	{{val}}</li>
+
+					<li ng-if="key == 'facebook'">Facebook
+					<ul>
+						<li ng-repeat="(key2, val2) in user.data[key]">{{key2}}	:	{{val2}}</li>
+					</ul>
+				</div>
+			</div>
+		
+		</script>
+		
+		<!-- me template -->
+		<script type="text/ng-template" id="/user.html">
+			<div class="page-header">
+				<h3>
+					<span>{{user.data.name}}</span>
+				</h3>
+			</div>
+			
+			<div ng-repeat="(key, val) in user.data">
+
+					<li ng-hide="key == 'facebook'">{{key}}	:	{{val}}</li>
+
+					<li ng-if="key == 'facebook'">Facebook
+					<ul>
+						<li ng-repeat="(key2, val2) in user[key]">{{key2}}	:	{{val2}}</li>
+					</ul>
+				</div>
+		
+		</script>
+		
+		<!-- me template -->
+		<script type="text/ng-template" id="/users.html">
+			//code templates for us to reuse
+			<div class="page-header">
+				<h3>
+					<span>All users</span>
+				</h3>
+			</div>
+			
+			<div ng-repeat="user in users">
+				<ul>
+				//list users dynamically
+				<div ng-repeat="(key, val) in user">
+
+					<li ng-hide="key == 'facebook'">{{key}}	:	{{val}}</li>
+
+					<li ng-if="key == 'facebook'">Facebook
+					<ul>
+						<li ng-repeat="(key2, val2) in user[key]">{{key2}}	:	{{val2}}</li>
+					</ul>
+				</div>
+			</ul>
+			
+			//list users based on preferred template
+			<ul>
+				<li>Username : <Strong>{{user.username}}</Strong></li>
+				<li>Email : <span>{{user.email}}</span></li>
+				<li>name : <span>{{user.name}}</span></li>
+				<li>password : <span>{{user.password}}</span></li>
+				<li>hash : <span>{{user.hash}}</span></li>
+				<li>salt : <span>{{user.salt}}</span></li>
+			</ul>
+			<br>
+			</div>
+		
+		</script>
+		
+		
+		
+		<!-- original posts template -->
+		<script type="text/ng-template" id="/posts.html">
+			<div class="page-header">
+				<h3>
+					<a ng-show="post.link" href="{{post.link}}">{{post.title}}</a>
+					<span ng-hide="post.link">{{post.title}}</span>
+				</h3>
+			</div>
+			
+			<form id="addcomment_form" ng-show="isLoggedIn()" ng-submit="addComment()">
+				<input type="text" placeholder="Comment" ng-model="body" />
+				<button type="submit">Add a new comment</button>
+			</form>
+			<div ng-hide="isLoggedIn()">
+				<h3>You need to <a href="/#/login">Log In</a> or <a href="/#/register">Register</a> before you can comment.</h3>
+			</div>
+			
+			<div ng-repeat="comment in post.comments">
+				<span class="glyphicon glyphicon-thumbs-up" ng-click="incrementUpvotes(comment)"></span>
+				{{comment.upvotes}} - by {{comment.author.username}}
+				<span style="font-size:20px; margin-left:10px;">
+				  {{comment.body}}
+				</span>
+			</div>
+		
+		</script>
+		
+		
+		
+	</body>
+	
+	
+	
+</html>
